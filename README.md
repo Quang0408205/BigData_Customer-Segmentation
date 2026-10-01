@@ -118,6 +118,7 @@ python scripts\run_web_demo.py
 
 Mở trình duyệt:
 
+
 ```text
 http://127.0.0.1:8000/web/
 ```
