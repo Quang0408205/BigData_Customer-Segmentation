@@ -63,3 +63,6 @@ desktop.ini
 tmp/
 temp/
 *.part
+
+# ===== Docs (chỉ giữ local) =====
+docs/

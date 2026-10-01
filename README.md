@@ -392,17 +392,6 @@ BigData_Customer-Segmentation/
 │   ├── app.js
 │   └── cluster_interpretation.json
 │
-├── docs/
-│   ├── 01_problem_definition.md
-│   ├── 02_dataset.md
-│   ├── 03_preprocessing.md
-│   ├── 04_architecture.md
-│   ├── 05_rfm.md
-│   ├── 06_kmeans.md
-│   ├── 07_evaluation.md
-│   ├── 08_business_analysis.md
-│   └── 14_viva.md
-│
 ├── docker-compose.yml
 ├── requirements.txt
 ├── .env.example
@@ -411,23 +400,7 @@ BigData_Customer-Segmentation/
 
 ---
 
-## 15. Tài liệu
-
-Phần giải thích chi tiết được đặt trong thư mục `docs/`:
-
-* [Problem Definition](docs/01_problem_definition.md)
-* [Dataset](docs/02_dataset.md)
-* [Preprocessing](docs/03_preprocessing.md)
-* [Architecture](docs/04_architecture.md)
-* [RFM](docs/05_rfm.md)
-* [K-Means](docs/06_kmeans.md)
-* [Evaluation](docs/07_evaluation.md)
-* [Business Analysis](docs/08_business_analysis.md)
-* [Viva Questions](docs/14_viva.md)
-
----
-
-## 16. Giới hạn của project
+## 15. Giới hạn của project
 
 * Dataset khoảng 94 MB nên chưa thể hiện rõ vấn đề về quy mô Big Data nếu chỉ xét kích thước dữ liệu.
 * Hệ thống chạy trên môi trường Docker local.
@@ -440,7 +413,7 @@ Phần giải thích chi tiết được đặt trong thư mục `docs/`:
 
 ---
 
-## 17. Repository
+## 16. Repository
 
 GitHub:
 
