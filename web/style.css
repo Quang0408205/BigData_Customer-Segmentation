@@ -1,0 +1,168 @@
+/* Web Demo — giao diện kiểu hệ thống phân tích dữ liệu nội bộ.
+   Palette tiết chế, 1 màu nhấn, không gradient / glow / shadow. Không framework, không CDN. */
+:root {
+  --bg: #F5F6F7;
+  --surface: #FFFFFF;
+  --ink: #20242A;
+  --muted: #68707A;
+  --line: #D9DDE2;
+  --line-soft: #E8EBEE;
+  --head: #F0F2F4;
+  --accent: #245B73;
+  --accent-soft: #E7EEF1;
+  --ok: #2F7D5B;
+  --radius: 3px;
+  --topbar-h: 64px;
+  --sidebar-w: 236px;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+html { font-size: 17px; scroll-behavior: smooth; scroll-padding-top: calc(var(--topbar-h) + 16px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 1rem/1.55 Inter, "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  font-feature-settings: "tnum";
+}
+code { font-family: var(--mono); font-size: 0.86em; background: var(--head); padding: 1px 4px; border-radius: 2px; overflow-wrap: anywhere; }
+h2 { font-size: 1.35rem; font-weight: 600; margin: 0 0 6px; }
+h3 { font-size: 1rem; font-weight: 600; margin: 26px 0 10px; }
+a { color: var(--accent); }
+
+/* ---------- Header ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  height: var(--topbar-h);
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 0 28px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+.brand-title { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.08em; color: var(--accent); }
+.brand-sub { font-size: 0.85rem; color: var(--muted); }
+.topbar-meta { display: flex; gap: 22px; font-size: 0.8rem; color: var(--muted); white-space: nowrap; }
+
+/* ---------- Layout ---------- */
+.layout { display: grid; grid-template-columns: var(--sidebar-w) minmax(0, 1fr); min-height: calc(100vh - var(--topbar-h)); }
+.sidebar {
+  position: sticky; top: var(--topbar-h);
+  align-self: start;
+  height: calc(100vh - var(--topbar-h));
+  padding: 18px 0;
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+.sidebar a {
+  display: block;
+  padding: 9px 22px 9px 19px;
+  border-left: 3px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  transition: color 150ms, background-color 150ms, border-color 150ms;
+}
+.sidebar a:hover { color: var(--ink); background: var(--head); }
+.sidebar a.active { color: var(--accent); border-left-color: var(--accent); background: var(--accent-soft); }
+
+.content { padding: 28px 36px 40px; max-width: 1400px; }
+section { padding-bottom: 34px; margin-bottom: 30px; border-bottom: 1px solid var(--line); }
+.section-note, .lead-text { margin: 0 0 18px; color: var(--muted); max-width: 980px; }
+.lead-text { color: var(--ink); }
+.hint { margin: 12px 0 0; color: var(--muted); font-size: 0.86rem; max-width: 1100px; }
+.flow-line { margin: 18px 0 0; font-size: 0.9rem; color: var(--muted); }
+.notice { margin-bottom: 20px; padding: 12px 16px; border: 1px solid #D9B8A8; background: #FBF3EF; color: #8A3B1E; border-radius: var(--radius); }
+
+/* ---------- Tóm tắt số liệu ---------- */
+.summary { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); }
+.metric { padding: 14px 18px; display: flex; flex-direction: column; gap: 2px; }
+.metric + .metric { border-left: 1px solid var(--line); }
+.metric-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.metric-value { font-size: 1.75rem; font-weight: 600; line-height: 1.25; }
+.metric-note { font-size: 0.78rem; color: var(--muted); }
+
+/* ---------- Bảng ---------- */
+.tbl { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--line); font-size: 0.92rem; }
+.tbl th, .tbl td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line-soft); vertical-align: top; }
+.tbl thead th { background: var(--head); color: var(--muted); font-size: 0.8rem; font-weight: 600; border-bottom: 1px solid var(--line); }
+.tbl tbody tr:last-child td { border-bottom: none; }
+.tbl tfoot td { border-top: 1px solid var(--line); border-bottom: none; color: var(--muted); }
+.tbl .num { text-align: right; white-space: nowrap; }
+.tbl tr.selected td { background: var(--accent-soft); font-weight: 600; }
+.tbl.kv th { width: 260px; background: var(--head); color: var(--muted); font-weight: 500; font-size: 0.86rem; border-bottom: 1px solid var(--line-soft); }
+.tbl .sub { display: block; color: var(--muted); font-size: 0.8rem; }
+.swatch { display: inline-block; width: 9px; height: 9px; margin-right: 8px; vertical-align: 1px; }
+
+/* ---------- Biểu đồ ---------- */
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.chart-box { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px 10px; }
+.chart-box.wide { margin-bottom: 4px; }
+.chart-box figcaption { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; }
+.chart svg { display: block; width: 100%; height: auto; }
+.chart.ready svg { animation: appear 200ms ease-out; }
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+
+.two-col { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.two-col > div > h3:first-child { margin-top: 0; }
+.tbl td:first-child > code, #rules-table code { white-space: nowrap; overflow-wrap: normal; }
+
+/* ---------- Nhận xét nhóm ---------- */
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 16px; margin-bottom: 10px; }
+.note-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 6px; }
+.note-head b { font-size: 0.98rem; }
+.note-head span { color: var(--muted); font-size: 0.85rem; }
+.note dl { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 4px 14px; margin: 0; font-size: 0.92rem; }
+.note dt { color: var(--muted); }
+.note dd { margin: 0; }
+
+/* ---------- Hình (PNG) ---------- */
+.gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.gallery figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px; }
+.gallery figure.wide { grid-column: 1 / -1; }
+.gallery img { display: block; width: 100%; height: auto; }
+.gallery figure.wide img { max-width: 1150px; margin: 0 auto; }
+.gallery figcaption { margin-top: 8px; font-size: 0.88rem; }
+.gallery figcaption b { font-weight: 600; }
+.gallery figcaption span { display: block; color: var(--muted); font-size: 0.82rem; }
+.img-missing { padding: 30px; text-align: center; color: #8A3B1E; background: #FBF3EF; }
+
+/* ---------- Sơ đồ kiến trúc ---------- */
+.diagram { list-style: none; margin: 0; padding: 0; max-width: 460px; }
+.diagram li {
+  position: relative;
+  background: var(--surface); border: 1px solid #9AA4AE; border-radius: 2px;
+  padding: 8px 14px; text-align: center;
+}
+.diagram li b { display: block; font-weight: 600; }
+.diagram li span { display: block; font-size: 0.8rem; color: var(--muted); }
+.diagram li + li { margin-top: 26px; }
+.diagram li + li::before { content: ""; position: absolute; top: -26px; left: 50%; height: 20px; border-left: 1px solid #6E7883; }
+.diagram li + li::after { content: ""; position: absolute; top: -8px; left: calc(50% - 4px); border: 4px solid transparent; border-top: 5px solid #6E7883; }
+
+.footer { font-size: 0.8rem; color: var(--muted); }
+
+/* ---------- Responsive cơ bản ---------- */
+@media (max-width: 1150px) {
+  .topbar-meta { display: none; }
+  .summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .metric:nth-child(4) { border-left: none; }
+  .metric:nth-child(n+4) { border-top: 1px solid var(--line); }
+  .two-col, .chart-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) {
+  html { font-size: 15px; }
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; display: flex; overflow-x: auto; padding: 0; border-right: none; border-bottom: 1px solid var(--line); }
+  .sidebar a { border-left: none; border-bottom: 3px solid transparent; white-space: nowrap; padding: 10px 14px; }
+  .sidebar a.active { border-bottom-color: var(--accent); }
+  .content { padding: 20px 16px 32px; }
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metric:nth-child(n) { border-left: none; border-top: 1px solid var(--line); }
+  .metric:nth-child(-n+2) { border-top: none; }
+  .metric:nth-child(even) { border-left: 1px solid var(--line); }
+  .tbl { display: block; overflow-x: auto; }
+  .gallery { grid-template-columns: 1fr; }
+  .note dl { grid-template-columns: 1fr; }
+}

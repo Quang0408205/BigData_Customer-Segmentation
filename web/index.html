@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phân khúc khách hàng — Phân tích dữ liệu giao dịch</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-title">PHÂN KHÚC KHÁCH HÀNG</div>
+    <div class="brand-sub">Phân tích dữ liệu giao dịch bằng Big Data</div>
+  </div>
+  <div class="topbar-meta">
+    <span>Dữ liệu: UCI Online Retail II</span>
+    <span>Xử lý: Hadoop HDFS · Apache Spark <span data-bind="spark_version"></span></span>
+    <span>Số liệu cập nhật: <span data-bind="generated_at"></span></span>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar" aria-label="Mục lục">
+    <a href="#tong-quan">Tổng quan</a>
+    <a href="#du-lieu">Dữ liệu</a>
+    <a href="#rfm">Phân tích RFM</a>
+    <a href="#phan-nhom">Phân nhóm khách hàng</a>
+    <a href="#danh-gia">Đánh giá mô hình</a>
+    <a href="#truc-quan">Trực quan hóa</a>
+    <a href="#kien-truc">Kiến trúc hệ thống</a>
+  </nav>
+
+  <main class="content">
+    <div id="load-error" class="notice" hidden></div>
+
+    <!-- Tổng quan -->
+    <section id="tong-quan">
+      <h2>Tổng quan</h2>
+      <p class="lead-text">Đồ án phân khúc khách hàng của một cửa hàng bán lẻ trực tuyến dựa trên lịch sử giao dịch.
+        Dữ liệu được lưu trên HDFS, xử lý bằng PySpark, mỗi khách hàng được mô tả bằng 3 chỉ số RFM và được phân nhóm bằng K-Means
+        (Spark MLlib).</p>
+
+      <div class="summary" aria-label="Tóm tắt số liệu">
+        <div class="metric"><span class="metric-label">Số giao dịch ban đầu</span><span class="metric-value" data-bind="raw_records"></span><span class="metric-note">dòng raw trên HDFS</span></div>
+        <div class="metric"><span class="metric-label">Số giao dịch sau xử lý</span><span class="metric-value" data-bind="processed_records"></span><span class="metric-note" data-bind="pct_kept"></span></div>
+        <div class="metric"><span class="metric-label">Số khách hàng</span><span class="metric-value" data-bind="customers"></span><span class="metric-note">có CustomerID</span></div>
+        <div class="metric"><span class="metric-label">Số nhóm (K)</span><span class="metric-value" data-bind="selected_k"></span><span class="metric-note" data-bind="k_range"></span></div>
+        <div class="metric"><span class="metric-label">Silhouette Score</span><span class="metric-value" data-bind="silhouette"></span><span class="metric-note">tại K được chọn</span></div>
+      </div>
+
+      <h3>Thông tin bộ dữ liệu</h3>
+      <table class="tbl kv" id="dataset-table"><tbody></tbody></table>
+
+      <p class="flow-line">Quy trình: Dữ liệu giao dịch → HDFS → PySpark → Tiền xử lý → RFM → K-Means → Đánh giá → Phân tích kết quả</p>
+    </section>
+
+    <!-- Dữ liệu -->
+    <section id="du-lieu">
+      <h2>Dữ liệu và tiền xử lý</h2>
+      <p class="section-note">Dữ liệu raw được làm sạch bằng PySpark theo 9 quy tắc, mỗi quy tắc ghi lại số dòng trước và sau.
+        Kết quả lưu dạng Parquet trên HDFS.</p>
+      <table class="tbl" id="rules-table">
+        <thead><tr><th class="num">Bước</th><th>Quy tắc</th><th>Mã quy tắc</th><th class="num">Số dòng bị loại</th><th class="num">Số dòng còn lại</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="hint" id="rules-note"></p>
+    </section>
+
+    <!-- RFM -->
+    <section id="rfm">
+      <h2>Phân tích RFM</h2>
+      <p class="section-note">Mỗi khách hàng được mô tả bằng 3 chỉ số, tính bằng Spark từ dữ liệu đã làm sạch.
+        Ngày tham chiếu (AnalysisDate): <strong data-bind="analysis_date"></strong>.</p>
+      <table class="tbl" id="rfm-table">
+        <thead><tr><th>Chỉ số</th><th>Ý nghĩa</th><th class="num">Trung vị</th><th class="num">Trung bình</th>
+          <th class="num">p25</th><th class="num">p75</th><th class="num">Nhỏ nhất</th><th class="num">Lớn nhất</th><th class="num">Độ lệch</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <h3>Cách tính</h3>
+      <table class="tbl kv" id="rfm-def-table"><tbody></tbody></table>
+      <p class="hint" id="rfm-note"></p>
+    </section>
+
+    <!-- Phân nhóm -->
+    <section id="phan-nhom">
+      <h2>Phân nhóm khách hàng</h2>
+      <p class="section-note">Kết quả K-Means với K = <span data-bind="selected_k"></span>. Số liệu là giá trị R/F/M gốc (chưa chuẩn hóa).
+        Số thứ tự nhóm do thuật toán gán, không mang ý nghĩa thứ hạng.</p>
+
+      <div class="chart-row">
+        <figure class="chart-box">
+          <figcaption>Phân bố khách hàng theo nhóm</figcaption>
+          <div class="chart" id="chart-customers"></div>
+        </figure>
+        <figure class="chart-box">
+          <figcaption>Tỉ trọng khách hàng và doanh thu theo nhóm (%)</figcaption>
+          <div class="chart" id="chart-share"></div>
+        </figure>
+      </div>
+
+      <table class="tbl" id="cluster-table">
+        <thead><tr><th>Nhóm (Cluster)</th><th class="num">Khách hàng</th><th class="num">Tỉ lệ khách</th><th class="num">Độ gần đây TB (ngày)</th>
+          <th class="num">Tần suất TB (lần)</th><th class="num">Giá trị TB</th><th class="num">Tỉ trọng doanh thu</th></tr></thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+      </table>
+
+      <h3>Nhận xét</h3>
+      <div id="cluster-notes"></div>
+      <p class="hint" id="interp-note"></p>
+    </section>
+
+    <!-- Đánh giá -->
+    <section id="danh-gia">
+      <h2>Đánh giá mô hình K-Means</h2>
+      <p class="section-note">Thử K = <span data-bind="k_range_short"></span> với hai cách chuẩn hóa dữ liệu. Pipeline dùng
+        log1p + StandardScaler; cách còn lại chỉ để đối chiếu.</p>
+
+      <figure class="chart-box wide">
+        <figcaption>Silhouette Score theo số nhóm K</figcaption>
+        <div class="chart" id="chart-silhouette"></div>
+      </figure>
+
+      <div class="two-col">
+        <div>
+          <h3>Kết quả theo K</h3>
+          <table class="tbl" id="k-table">
+            <thead><tr><th class="num">K</th><th class="num">Silhouette (log1p)</th><th class="num">Nhóm nhỏ nhất (log1p)</th>
+              <th class="num">Silhouette (không log1p)</th><th class="num">Nhóm nhỏ nhất (không log1p)</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div>
+          <h3>Mô hình được chọn</h3>
+          <table class="tbl kv" id="model-table"><tbody></tbody></table>
+          <h3>Số khách hàng mỗi nhóm</h3>
+          <table class="tbl" id="size-table">
+            <thead><tr><th>Nhóm</th><th class="num">Khách hàng</th><th class="num">Tỉ lệ</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="hint">Tiêu chí chọn K: không dùng cách chuẩn hóa tạo ra nhóm chỉ vài khách (outlier); nhóm nhỏ nhất phải đủ lớn;
+        Silhouette cao; các nhóm khác nhau rõ trên R/F/M. K = 2 có Silhouette cao nhất nhưng chỉ chia "đang mua / không mua".
+        Chi tiết: <code>docs/07_evaluation.md</code>.</p>
+    </section>
+
+    <!-- Trực quan hóa -->
+    <section id="truc-quan">
+      <h2>Trực quan hóa</h2>
+      <p class="section-note">Biểu đồ do pipeline sinh ra (Matplotlib, <code>output/reports/charts/</code>). Bấm vào hình để xem kích thước gốc.</p>
+      <div class="gallery" id="gallery"></div>
+    </section>
+
+    <!-- Kiến trúc -->
+    <section id="kien-truc">
+      <h2>Kiến trúc hệ thống</h2>
+      <div class="two-col arch">
+        <ol class="diagram" aria-label="Luồng xử lý">
+          <li><b>Dữ liệu giao dịch</b><span>CSV từ UCI Online Retail II</span></li>
+          <li><b>HDFS</b><span>lưu raw, processed, rfm, kết quả</span></li>
+          <li><b>PySpark</b><span>đọc/ghi trực tiếp HDFS, xử lý song song</span></li>
+          <li><b>Tiền xử lý</b><span>9 quy tắc, ghi Parquet</span></li>
+          <li><b>RFM</b><span>gom giao dịch theo khách hàng</span></li>
+          <li><b>K-Means</b><span>log1p + StandardScaler, Spark MLlib</span></li>
+          <li><b>Phân tích kết quả</b><span>Silhouette, profile từng nhóm</span></li>
+        </ol>
+        <div>
+          <h3>Thành phần (Docker Compose)</h3>
+          <table class="tbl">
+            <thead><tr><th>Container</th><th>Vai trò</th></tr></thead>
+            <tbody>
+              <tr><td><code>namenode</code></td><td>HDFS NameNode — quản lý metadata (file → block → DataNode)</td></tr>
+              <tr><td><code>datanode</code></td><td>HDFS DataNode — lưu block dữ liệu</td></tr>
+              <tr><td><code>spark-master</code></td><td>Spark Master và driver (<code>spark-submit</code>)</td></tr>
+              <tr><td><code>spark-worker</code></td><td>Spark Worker — executor chạy task</td></tr>
+            </tbody>
+          </table>
+          <p class="hint" id="arch-facts"></p>
+          <p class="hint">Trang này chỉ đọc kết quả đã có; không gọi Spark, không đọc HDFS, không chạy lại mô hình.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      Số liệu đọc từ <code>output/reports/summary.json</code> (tạo bởi <code>scripts/build_web_summary.py</code> từ output của pipeline).
+      Tài liệu: <code>README.md</code>, <code>docs/</code>.
+    </footer>
+  </main>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

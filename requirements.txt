@@ -1,0 +1,22 @@
+# ---------------------------------------------------------------
+# Python 3.12 (host Windows .venv)
+# pyspark phía client PHẢI trùng version với Spark trong Docker
+# cluster (image apache/spark:4.0.4-java21-python3).
+# Spark 4.0 hỗ trợ chính thức Java 17/21 (máy dev đang dùng JDK 21).
+# Cluster Spark dùng image riêng (docker/spark/Dockerfile: pyyaml, python-dotenv, numpy).
+# ---------------------------------------------------------------
+
+# Big Data processing + MLlib
+pyspark==4.0.4
+
+# Configuration
+pyyaml>=6.0
+python-dotenv>=1.0
+
+# Dataset download: đọc file Excel gốc để chuyển sang CSV.
+# pandas cũng dùng để đọc các bảng NHỎ đã aggregate khi vẽ biểu đồ (không xử lý dataset giao dịch).
+openpyxl>=3.1
+pandas>=2.2
+
+# Biểu đồ PNG cho báo cáo (Phase 8+10), vẽ trên host từ bảng nhỏ đã aggregate
+matplotlib>=3.8

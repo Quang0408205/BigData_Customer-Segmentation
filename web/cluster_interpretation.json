@@ -1,0 +1,34 @@
+{
+  "source": "docs/08_business_analysis.md (mục 4–5) — tên nhóm do người phân tích đề xuất SAU KHI xem số liệu; không chứa con số, số liệu lấy từ output/reports/cluster_profile.json",
+  "k": 4,
+  "clusters": {
+    "0": {
+      "name": "Khách giá trị cao, trung thành",
+      "label_en": "Champions",
+      "finding": "Mua gần đây nhất, mua nhiều lần nhất và chi nhiều nhất; không có khách nào chỉ mua một lần; phần lớn là khách lâu năm.",
+      "interpretation": "Nhóm giá trị cao và đang hoạt động. Doanh thu phụ thuộc mạnh vào nhóm này nên mất một phần nhỏ khách ở đây ảnh hưởng nhiều hơn các nhóm khác.",
+      "recommendation": "Ưu tiên giữ chân: chương trình khách thân thiết, chăm sóc riêng cho khách lớn; theo dõi sớm khi khách lâu chưa quay lại."
+    },
+    "1": {
+      "name": "Đã rời bỏ / mua một lần",
+      "label_en": "Lost",
+      "finding": "Lần mua cuối đã hơn một năm; đa số chỉ mua đúng một lần; nhóm đông nhất nhưng đóng góp doanh thu thấp nhất.",
+      "interpretation": "Khách đã ngừng mua hoặc mua thử rồi không quay lại. Một phần có thể là khách mua theo mùa (giả thuyết, chưa kiểm chứng).",
+      "recommendation": "Chỉ dùng kênh chi phí thấp (email tự động, ưu đãi quay lại); tìm hiểu lý do trước khi đầu tư lớn."
+    },
+    "2": {
+      "name": "Khách mới / tiềm năng",
+      "label_en": "New / Promising",
+      "finding": "Mua gần đây gần như nhóm giá trị cao nhưng số lần mua và tổng chi thấp hơn nhiều; thời gian gắn bó ngắn nhất.",
+      "interpretation": "Đa số mới bắt đầu mua trong vài tháng gần đây; giá trị thấp một phần vì chưa có đủ thời gian để mua nhiều.",
+      "recommendation": "Nuôi dưỡng để mua lặp lại: gợi ý sản phẩm liên quan, ưu đãi cho lần mua tiếp theo."
+    },
+    "3": {
+      "name": "Có nguy cơ rời bỏ",
+      "label_en": "At Risk",
+      "finding": "Khoảng nửa năm chưa quay lại; tần suất và tổng chi trên mức điển hình; hầu hết đã từng mua lặp lại.",
+      "interpretation": "Khách từng mua đều nhưng đang xa dần — đáng giữ hơn nhóm đã rời bỏ vì có lịch sử mua và giá trị cao hơn.",
+      "recommendation": "Chiến dịch win-back cá nhân hóa theo sản phẩm từng mua; khảo sát lý do giảm mua."
+    }
+  }
+}

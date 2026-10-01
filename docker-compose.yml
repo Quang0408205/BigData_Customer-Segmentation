@@ -1,0 +1,104 @@
+# =============================================================
+# Big Data cluster tối thiểu cho project (chạy trên 1 máy):
+#   HDFS : namenode + datanode              (apache/hadoop:3.4.1)
+#   Spark: spark-master + spark-worker       (apache/spark:4.0.4 + pyyaml/dotenv)
+#
+# Spark driver (spark-submit) chạy BÊN TRONG container spark-master để
+# mọi thành phần nằm chung Docker network và gọi nhau bằng hostname.
+#
+# Web UI:
+#   HDFS NameNode  http://localhost:9870
+#   HDFS DataNode  http://localhost:9864
+#   Spark Master   http://localhost:8080
+#   Spark Worker   http://localhost:8081
+#   Spark Driver   http://localhost:4040   (chỉ khi có job đang chạy)
+# =============================================================
+
+name: customer-segmentation
+
+x-hadoop: &hadoop
+  image: apache/hadoop:3.4.1
+  env_file: ./docker/hadoop/hadoop.env
+  restart: unless-stopped
+
+x-spark: &spark
+  build: ./docker/spark
+  image: customer-segmentation/spark:4.0.4
+  restart: unless-stopped
+  environment:
+    SPARK_MASTER_URL: spark://spark-master:7077
+    HDFS_NAMENODE_HOST: namenode
+    HDFS_NAMENODE_PORT: "8020"
+    PYSPARK_PYTHON: python3
+    PYTHONPATH: /opt/project
+  volumes:
+    - ./:/opt/project          # mã nguồn project (sửa trên Windows, chạy trong container)
+  working_dir: /opt/project
+
+services:
+  namenode:
+    <<: *hadoop
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    environment:
+      # Format NameNode đúng 1 lần: chỉ khi thư mục metadata chưa tồn tại
+      ENSURE_NAMENODE_DIR: /data/dfs/name
+      HADOOP_HEAPSIZE_MAX: 512m
+    ports:
+      - "9870:9870"   # Web UI
+    volumes:
+      - namenode-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9870/ > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  datanode:
+    <<: *hadoop
+    hostname: datanode
+    command: ["hdfs", "datanode"]
+    environment:
+      HADOOP_HEAPSIZE_MAX: 512m
+    ports:
+      - "9864:9864"   # Web UI
+    volumes:
+      - datanode-data:/data
+    depends_on:
+      namenode:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9864/ > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  spark-master:
+    <<: *spark
+    hostname: spark-master
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master",
+              "--host", "spark-master", "--port", "7077", "--webui-port", "8080"]
+    ports:
+      - "8080:8080"   # Master Web UI
+      - "7077:7077"   # Master RPC
+      - "4040:4040"   # Driver UI (spark-submit chạy trong container này)
+    depends_on:
+      namenode:
+        condition: service_healthy
+
+  spark-worker:
+    <<: *spark
+    hostname: spark-worker
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker",
+              "spark://spark-master:7077",
+              "--cores", "4", "--memory", "2g", "--webui-port", "8081"]
+    ports:
+      - "8081:8081"   # Worker Web UI
+    depends_on:
+      - spark-master
+
+volumes:
+  namenode-data:
+  datanode-data:

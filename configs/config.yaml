@@ -1,0 +1,125 @@
+# =============================================================
+# Cấu hình tập trung cho project.
+# Code KHÔNG hard-code đường dẫn / tham số: tất cả đọc từ file này
+# thông qua src/config/settings.py.
+# Giá trị phụ thuộc máy (host, port, memory) nằm trong .env.
+# =============================================================
+
+project:
+  name: customer-segmentation-bigdata
+  version: 0.0.1
+
+dataset:
+  name: Online Retail II
+  source: UCI Machine Learning Repository
+  url: https://archive.ics.uci.edu/dataset/502/online+retail+ii
+  # File zip chính thức (chứa online_retail_II.xlsx, 2 sheet)
+  download_url: https://archive.ics.uci.edu/static/public/502/online+retail+ii.zip
+  archive_filename: online_retail_II.zip
+  excel_filename: online_retail_II.xlsx
+  # CSV gộp 2 sheet, giữ nguyên tên cột gốc - đây là input của Spark
+  raw_filename: online_retail_II.csv
+  metadata_filename: online_retail_II.metadata.json
+
+# Đường dẫn local (tương đối so với project root)
+paths:
+  raw: data/raw
+  processed: data/processed
+  sample: data/sample
+  output_rfm: output/rfm
+  output_clustering: output/clustering
+  output_evaluation: output/evaluation
+  output_reports: output/reports
+
+# HDFS (Phase 2). URI NameNode lấy từ env HDFS_NAMENODE_HOST / HDFS_NAMENODE_PORT
+# (mặc định namenode:8020 = hostname của service trong docker-compose).
+hdfs:
+  base_dir: /data/customer-segmentation
+  raw_dir: /data/customer-segmentation/raw
+  processed_dir: /data/customer-segmentation/processed
+  rfm_dir: /data/customer-segmentation/rfm
+  output_dir: /data/customer-segmentation/output
+  evaluation_dir: /data/customer-segmentation/evaluation
+
+spark:
+  app_name: customer-segmentation
+  # InvoiceDate là giờ địa phương UK, không kèm timezone -> giữ nguyên giá trị
+  timezone: UTC
+
+# Làm sạch giao dịch (Phase 4) - src/preprocessing/clean_transactions.py
+preprocessing:
+  timestamp_format: "yyyy-MM-dd HH:mm:ss"
+  # Hóa đơn bán hàng hợp lệ: đúng 6 chữ số. 'C' + 6 số = hủy; 'A' + 6 số = điều chỉnh nợ xấu
+  valid_invoice_pattern: '^\d{6}$'
+  cancel_prefix: C
+  # Mã KHÔNG phải sản phẩm (phí, điều chỉnh, test, voucher) - danh sách tường minh lấy từ dữ liệu thật,
+  # không dùng regex vì regex bắt nhầm sản phẩm thật (SP1002, DCGS*, PADS)
+  non_product_stockcodes:
+    - POST            # POSTAGE
+    - DOT             # DOTCOM POSTAGE
+    - C2              # CARRIAGE
+    - M               # Manual
+    - m               # Manual
+    - D               # Discount
+    - S               # SAMPLES
+    - B               # Adjust bad debt
+    - BANK CHARGES
+    - AMAZONFEE
+    - ADJUST          # Adjustment by ...
+    - ADJUST2
+    - CRUK            # CRUK Commission
+    - TEST001         # This is a test product.
+    - TEST002
+    - GIFT
+    - gift_0001_10    # Dotcomgiftshop Gift Voucher
+    - gift_0001_20
+    - gift_0001_30
+    - gift_0001_40
+    - gift_0001_50
+    - gift_0001_60
+    - gift_0001_70
+    - gift_0001_80
+    - gift_0001_90
+  # Số file Parquet output. Sau dedup/window Spark có 200 partition (spark.sql.shuffle.partitions)
+  # -> 200 file nhỏ ~120 KB. Gộp còn 4 (= số core) để tránh "small files" trên HDFS mà vẫn đọc song song.
+  output_files: 4
+  report_filename: preprocessing_report.json
+
+# Tham số feature engineering (Phase 5)
+rfm:
+  # Tên cột ở processed layer (đổi từ "Customer ID" ở Phase 4)
+  customer_col: CustomerID
+  # AnalysisDate = ngày tham chiếu để tính Recency.
+  # null = rule tự động: to_date(max(InvoiceDate) của dữ liệu processed) + analysis_date_offset_days.
+  # Có thể đặt cố định dạng "YYYY-MM-DD" nếu muốn phân tích tại một ngày khác.
+  analysis_date: null
+  analysis_date_offset_days: 1
+  output_files: 1               # vài nghìn khách -> 1 file Parquet là đủ
+  report_filename: rfm_report.json
+
+# Tham số phân cụm (Phase 6-7)
+clustering:
+  features: [Recency, Frequency, Monetary]   # cột của bảng RFM (Phase 5)
+  # log1p trước StandardScaler (giảm lệch phải của F, M). Chốt sau khi so sánh ở src/clustering/evaluate.py:
+  # không log -> K=3..6 đều có cụm 2-21 khách (outlier); có log -> cụm nhỏ nhất >= 7.7%
+  log_transform: true
+  k_min: 2
+  k_max: 6
+  seed: 42
+  max_iter: 100        # đủ lớn để K-Means hội tụ theo tol (numIter thật ghi trong báo cáo)
+  tol: 1.0e-4          # dừng khi centroid dịch chuyển < tol
+  # K dùng trong pipeline. null = chưa chọn -> chạy evaluate.py trước, xem kết quả rồi mới điền.
+  # Chốt 2026-10-01 từ output/evaluation/k_evaluation.json (log1p): K=4 có Silhouette cao nhất trong K=3..6 (0.5325),
+  # cụm nhỏ nhất 20.19%, 4 cụm khác nhau rõ trên R/F/M. K=2 (0.6266) quá thô. Lý do đầy đủ: docs/07_evaluation.md
+  selected_k: 4
+  output_files: 1
+  evaluation_report: k_evaluation.json
+  kmeans_report: kmeans_report.json
+
+# Phân tích cụm + biểu đồ (Phase 8+10)
+analysis:
+  # Spark (container) ghi profile lên HDFS output/analysis + export bảng nhỏ ra local để host vẽ biểu đồ
+  profile_csv: cluster_profile.csv          # trong paths.output_reports
+  profile_json: cluster_profile.json        # trong paths.output_reports
+  customers_csv: customer_clusters.csv      # trong paths.output_clustering (5,8xx dòng: CustomerID, R, F, M, Tenure, Cluster)
+  charts_dir: output/reports/charts
